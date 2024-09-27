@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { PokemonService } from './pokemon.service';
 import { PokemonController } from './pokemon.controller';
-import { MongooseModule } from '@nestjs/mongoose';
 import { Pokemon, PokemonSchema } from './entities/pokemon.entity';
 //? import { DolarDiarco, DolarDiarcoSchema } from './entities/dolar-diarco.entity';
 //? import { DolarDiarcoJob } from 'job/cron/dolar-diarco.job';
@@ -10,6 +11,7 @@ import { Pokemon, PokemonSchema } from './entities/pokemon.entity';
 @Module({
   imports: [
     //? ScheduleModule.forRoot(),
+    ConfigModule,
     MongooseModule.forFeature([
       {
         name: Pokemon.name, schema: PokemonSchema
@@ -18,8 +20,8 @@ import { Pokemon, PokemonSchema } from './entities/pokemon.entity';
     ])
   ],
   controllers: [PokemonController],
-  providers: [PokemonService,
-  ],
+  providers: [PokemonService],
+  exports: [MongooseModule],
   //? DolarDiarcoJob
 })
 export class PokemonModule { }

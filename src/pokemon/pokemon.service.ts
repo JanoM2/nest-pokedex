@@ -1,20 +1,27 @@
 import { InjectModel } from '@nestjs/mongoose';
+import { ConfigService } from '@nestjs/config';
 import { isValidObjectId, Model } from 'mongoose';
-import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException, Query } from '@nestjs/common';
 import { Pokemon } from './entities/pokemon.entity';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 //? import { DolarDiarco } from './entities/dolar-diarco.entity';
 //? import { CreateDolarDiarcoDto } from './dto/create-dolarDiarco.dto';
 
 @Injectable()
 export class PokemonService {
+  private defaultLimit: number;
+
   constructor(
     @InjectModel(Pokemon.name)
     private readonly pokemonModel: Model<Pokemon>,
     //? @InjectModel(DolarDiarco.name)
     //? private readonly dolarDiarcoModel: Model<DolarDiarco>
-  ) { }
+    private readonly configService: ConfigService
+  ) {
+    this.defaultLimit = configService.get<number>('defaultLimit')
+  }
 
   async create(
     createPokemonDto: CreatePokemonDto
@@ -23,6 +30,7 @@ export class PokemonService {
     try {
       createPokemonDto.name = createPokemonDto.name.toLowerCase();
       const pokemon = await this.pokemonModel.create(createPokemonDto)
+      console.log(pokemon)
       return pokemon;
     } catch (error) {
       this.handleException(error)
@@ -31,8 +39,14 @@ export class PokemonService {
     //? return dolarDiarco;
   }
 
-  findAll() {
-    return `This action returns all pokemon`;
+  findAll(paginationDto: PaginationDto) {
+    const { limit = this.defaultLimit, offset = 0 } = paginationDto;
+
+    return this.pokemonModel.find()
+      .limit(limit) // que muestre de 5 en 5
+      .skip(offset) // se puede saltear los 5 primeros
+      .sort({ no: 1 }) // se los puede ordenar (ordena la tabla 'no' de forma ascendente)
+      .select('-__v'); // esto sirve para no mostrar la propiedad __v en la respuesta 
   }
 
   async findOne(term: string) {
